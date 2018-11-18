@@ -1,7 +1,7 @@
 // 控制器基类
 // by YuRonghui 2018-4-12
-const { error, catchErr, getParams } = require('./util');
-const Query = require('./query');
+const { error, catchErr, getParams } = require('wood-util')();
+const Query = require('wood-query')();
 
 class Controller {
   constructor(opts = {}, models) {
