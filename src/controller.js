@@ -1,7 +1,7 @@
 // 控制器基类
 // by YuRonghui 2018-4-12
-const { error, catchErr, getParams } = require('wood-util')();
-const Query = require('wood-query')();
+const { Util } = require('wood-util')();
+const { Query } = require('wood-query')();
 
 class Controller {
   constructor(opts = {}, models) {
@@ -12,13 +12,13 @@ class Controller {
   //列表
   async list(req, res, next) {
     let Model = WOOD.models.get(this.defaultModel),
-        body = getParams(req),
+        body = Util.getParams(req),
         page = Number(body.data.page) || 1,
         limit = Number(body.data.limit) || 20,
         largepage = Number(body.data.largepage) || Math.ceil(page * limit / 20000);
     body.data.largepage = largepage;
     let query = Query.getQuery(req).limit(limit);
-    const result = await catchErr(Model.findList(query, this.addLock));
+    const result = await Util.catchErr(Model.findList(query, this.addLock));
 
     if(result.err){
       res.print(result);
@@ -37,33 +37,33 @@ class Controller {
   //详情
   async detail(req, res, next) {
     let Model = WOOD.models.get(this.defaultModel),
-        body = getParams(req);
-    const result = await catchErr(Model.findOne(body.data, this.addLock));
+        body = Util.getParams(req);
+    const result = await Util.catchErr(Model.findOne(body.data, this.addLock));
     res.print(result);
   }
   //新增
   async create(req, res, next) {
     let Model = WOOD.models.get(this.defaultModel),
-        body = getParams(req),
+        body = Util.getParams(req),
         result = {};
     if(Array.isArray(body.data)){
       for(let i = 0, lang = body.data.length; i < lang; i++){
-        result = await catchErr(Model.create(body.data[i], this.addLock, this.hasCheck));
+        result = await Util.catchErr(Model.create(body.data[i], this.addLock, this.hasCheck));
       }
     }else{
-      result = await catchErr(Model.create(body.data, this.addLock, this.hasCheck));
+      result = await Util.catchErr(Model.create(body.data, this.addLock, this.hasCheck));
     }
     res.print(result);
   }
   //修改
   async update(req, res, next) {
     let Model = WOOD.models.get(this.defaultModel),
-        body = getParams(req);
+        body = Util.getParams(req);
     if(Array.isArray(body.data)){
       let allResult = {};
       for(let i = 0, lang = body.data.length; i < lang; i++){
         delete body.data[i].updateTime;
-        let result = await catchErr(Model.update(body.data[i], this.addLock, this.hasCheck));
+        let result = await Util.catchErr(Model.update(body.data[i], this.addLock, this.hasCheck));
         if(result.err) {
           allResult.err = result.err;
           break;
@@ -75,23 +75,23 @@ class Controller {
       res.print(allResult);
     }else{
       delete body.data.updateTime;
-      const result = await catchErr(Model.update(body.data, this.addLock, this.hasCheck));
+      const result = await Util.catchErr(Model.update(body.data, this.addLock, this.hasCheck));
       res.print(result);
     }
   }
   // 删除
   async remove(req, res, next) {
     let Model = WOOD.models.get(this.defaultModel),
-        body = getParams(req);
-    const result = await catchErr(Model.remove(body.data));
+        body = Util.getParams(req);
+    const result = await Util.catchErr(Model.remove(body.data));
     res.print(result);
   }
   // 软删除
   async softRemove(req, res, next) {
     let Model = WOOD.models.get(this.defaultModel),
-        body = getParams(req);
+        body = Util.getParams(req);
     body.data.status = -1;
-    const result = await catchErr(Model.update(body.data, this.addLock, this.hasCheck));
+    const result = await Util.catchErr(Model.update(body.data, this.addLock, this.hasCheck));
     res.print(result);
   }
 }
