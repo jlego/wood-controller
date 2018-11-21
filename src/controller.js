@@ -9,6 +9,7 @@ class Controller {
     this.addLock = opts.addLock || true;
     this.hasCheck = opts.hasCheck || true;
   }
+  
   //列表
   async list(req, res, next) {
     let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
@@ -17,8 +18,9 @@ class Controller {
         limit = Number(body.data.limit) || 20,
         largepage = Number(body.data.largepage) || Math.ceil(page * limit / 20000);
     body.data.largepage = largepage;
-    let query = Query(req).limit(limit);
-    const result = await Util.catchErr(Model.findList(query, this.addLock));
+    let query = Query().limit(limit);
+    let cacheKey = await Util.getListKey(req);
+    const result = await Util.catchErr(Model.findList(query, cacheKey, this.addLock));
 
     if(result.err){
       res.print(result);
@@ -34,6 +36,7 @@ class Controller {
       });
     }
   }
+
   //详情
   async detail(req, res, next) {
     let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
@@ -41,6 +44,7 @@ class Controller {
     const result = await Util.catchErr(Model.findOne(body.data, this.addLock));
     res.print(result);
   }
+
   //新增
   async create(req, res, next) {
     let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
@@ -55,6 +59,7 @@ class Controller {
     }
     res.print(result);
   }
+
   //修改
   async update(req, res, next) {
     let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
@@ -70,7 +75,7 @@ class Controller {
         }
       }
       if(!allResult.err){
-        allResult = {data: body.data.map(item => item.rowid || item.id)};
+        allResult = {data: body.data.map(item => item.rowid || item._id)};
       }
       res.print(allResult);
     }else{
@@ -79,6 +84,7 @@ class Controller {
       res.print(result);
     }
   }
+
   // 删除
   async remove(req, res, next) {
     let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
@@ -86,6 +92,7 @@ class Controller {
     const result = await Util.catchErr(Model.remove(body.data));
     res.print(result);
   }
+
   // 软删除
   async softRemove(req, res, next) {
     let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
