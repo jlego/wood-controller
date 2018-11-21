@@ -18,7 +18,7 @@ class Controller {
         limit = Number(body.data.limit) || 20,
         largepage = Number(body.data.largepage) || Math.ceil(page * limit / 20000);
     body.data.largepage = largepage;
-    let query = Query().limit(limit);
+    let query = Query(body.data).limit(limit);
     let cacheKey = await Util.getListKey(req);
     const result = await Util.catchErr(Model.findList(query, cacheKey, this.addLock));
 
