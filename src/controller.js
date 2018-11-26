@@ -2,6 +2,7 @@
 // by YuRonghui 2018-4-12
 const { Util } = require('wood-util')();
 const { Query } = require('wood-query')();
+const { catchErr, error } = WOOD;
 
 class Controller {
   constructor(opts = {}, models) {
@@ -10,7 +11,7 @@ class Controller {
     this.addLock = opts.addLock || true;
     this.hasCheck = opts.hasCheck || true;
   }
-  
+
   //列表
   async list(req, res, next) {
     let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
@@ -21,7 +22,7 @@ class Controller {
     body.data.largepage = largepage;
     let query = Query(body.data).limit(limit);
     let cacheKey = await Util.getListKey(req);
-    const result = await Util.catchErr(Model.findList(query, cacheKey, this.addLock));
+    const result = await catchErr(Model.findList(query, cacheKey, this.addLock));
 
     if(result.err){
       res.print(result);
@@ -42,7 +43,7 @@ class Controller {
   async detail(req, res, next) {
     let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
-    const result = await Util.catchErr(Model.findOne(body.data, this.addLock));
+    const result = await catchErr(Model.findOne(body.data, this.addLock));
     res.print(result);
   }
 
@@ -53,10 +54,10 @@ class Controller {
         result = {};
     if(Array.isArray(body.data)){
       for(let i = 0, lang = body.data.length; i < lang; i++){
-        result = await Util.catchErr(Model.create(body.data[i], this.addLock, this.hasCheck));
+        result = await catchErr(Model.create(body.data[i], this.addLock, this.hasCheck));
       }
     }else{
-      result = await Util.catchErr(Model.create(body.data, this.addLock, this.hasCheck));
+      result = await catchErr(Model.create(body.data, this.addLock, this.hasCheck));
     }
     res.print(result);
   }
@@ -69,7 +70,7 @@ class Controller {
       let allResult = {};
       for(let i = 0, lang = body.data.length; i < lang; i++){
         delete body.data[i].updateTime;
-        let result = await Util.catchErr(Model.update(body.data[i], this.addLock, this.hasCheck));
+        let result = await catchErr(Model.update(body.data[i], this.addLock, this.hasCheck));
         if(result.err) {
           allResult.err = result.err;
           break;
@@ -81,7 +82,7 @@ class Controller {
       res.print(allResult);
     }else{
       delete body.data.updateTime;
-      const result = await Util.catchErr(Model.update(body.data, this.addLock, this.hasCheck));
+      const result = await catchErr(Model.update(body.data, this.addLock, this.hasCheck));
       res.print(result);
     }
   }
@@ -90,7 +91,7 @@ class Controller {
   async remove(req, res, next) {
     let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
-    const result = await Util.catchErr(Model.remove(body.data));
+    const result = await catchErr(Model.remove(body.data));
     res.print(result);
   }
 
@@ -99,7 +100,7 @@ class Controller {
     let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
     body.data.status = -1;
-    const result = await Util.catchErr(Model.update(body.data, this.addLock, this.hasCheck));
+    const result = await catchErr(Model.update(body.data, this.addLock, this.hasCheck));
     res.print(result);
   }
 }
