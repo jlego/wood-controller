@@ -6,13 +6,14 @@ const { Query } = require('wood-query')();
 class Controller {
   constructor(opts = {}, models) {
     this.defaultModel = opts.defaultModel || '';
+    this.ctx = opts.ctx;
     this.addLock = opts.addLock || true;
     this.hasCheck = opts.hasCheck || true;
   }
   
   //列表
   async list(req, res, next) {
-    let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
+    let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req),
         page = Number(body.data.page) || 1,
         limit = Number(body.data.limit) || 20,
@@ -39,7 +40,7 @@ class Controller {
 
   //详情
   async detail(req, res, next) {
-    let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
+    let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
     const result = await Util.catchErr(Model.findOne(body.data, this.addLock));
     res.print(result);
@@ -47,7 +48,7 @@ class Controller {
 
   //新增
   async create(req, res, next) {
-    let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
+    let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req),
         result = {};
     if(Array.isArray(body.data)){
@@ -62,7 +63,7 @@ class Controller {
 
   //修改
   async update(req, res, next) {
-    let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
+    let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
     if(Array.isArray(body.data)){
       let allResult = {};
@@ -87,7 +88,7 @@ class Controller {
 
   // 删除
   async remove(req, res, next) {
-    let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
+    let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
     const result = await Util.catchErr(Model.remove(body.data));
     res.print(result);
@@ -95,7 +96,7 @@ class Controller {
 
   // 软删除
   async softRemove(req, res, next) {
-    let Model = WOOD.Plugin('model')._models.get(this.defaultModel),
+    let Model = this.ctx.Plugin('model')._models.get(this.defaultModel),
         body = Util.getParams(req);
     body.data.status = -1;
     const result = await Util.catchErr(Model.update(body.data, this.addLock, this.hasCheck));
