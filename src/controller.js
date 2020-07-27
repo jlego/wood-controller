@@ -1,5 +1,5 @@
 // 控制器基类
-// by YuRonghui 2018-4-12
+// by YuRonghui 2020-7-22
 const { Util } = require('wood-util')();
 const { Query } = require('wood-query')();
 
@@ -14,28 +14,10 @@ class Controller {
   async list(req, res, next) {
     let { Plugin, catchErr } = WOOD;
     let Model = Plugin('model').Model(this.defaultModel),
-        body = Util.getParams(req),
-        page = Number(body.data.page) || 1,
-        limit = Number(body.data.limit) || 20,
-        largepage = Number(body.data.largepage) || Math.ceil(page * limit / 20000);
-    body.data.largepage = largepage;
-    let query = Query(body.data).limit(limit);
-    let cacheKey = await Util.getListKey(req);
-    const result = await catchErr(Model.findList(query, cacheKey, this.addLock));
-
-    if(result.err){
-      res.print(result);
-    }else{
-      let totalpage = Math.ceil(Number(result.data.count) / Number(body.data.limit || 20)) || 1;
-      res.print({
-        list: result.data.list,
-        page: page,
-        largepage: largepage,
-        limit: limit,
-        total: result.data.count,
-        totalpage: totalpage
-      });
-    }
+        body = Util.getParams(req);
+    let query = Query(body);
+    const result = await catchErr(Model.findList(query));
+    res.print(result);
   }
 
   //详情
@@ -43,7 +25,7 @@ class Controller {
     let { Plugin, catchErr } = WOOD;
     let Model = Plugin('model').Model(this.defaultModel),
         body = Util.getParams(req);
-    const result = await catchErr(Model.findOne(body.data));
+    const result = await catchErr(Model.findOne(body));
     res.print(result);
   }
 
@@ -53,12 +35,12 @@ class Controller {
     let Model = Plugin('model').Model(this.defaultModel),
         body = Util.getParams(req),
         result = {};
-    if(Array.isArray(body.data)){
-      for(let i = 0, lang = body.data.length; i < lang; i++){
-        result = await catchErr(Model.create(body.data[i]));
+    if(Array.isArray(body)){
+      for(let i = 0, lang = body.length; i < lang; i++){
+        result = await catchErr(Model.create(body[i]));
       }
     }else{
-      result = await catchErr(Model.create(body.data));
+      result = await catchErr(Model.create(body));
     }
     res.print(result);
   }
@@ -68,28 +50,28 @@ class Controller {
     let { Plugin, catchErr } = WOOD;
     let Model = Plugin('model').Model(this.defaultModel),
         body = Util.getParams(req);
-    if(Array.isArray(body.data)){
+    if(Array.isArray(body)){
       let allResult = {};
-      for(let i = 0, lang = body.data.length; i < lang; i++){
-        let { rowid, _id, updateTime, ...theData} = body.data[i];
-        if(!rowid || !_id) continue;
-        let result = await catchErr(Model.update({rowid, _id}, theData));
+      for(let i = 0, lang = body.length; i < lang; i++){
+        let { _id, updateTime, ...theData} = body[i];
+        if(!_id) continue;
+        let result = await catchErr(Model.update({ _id }, theData));
         if(result.err) {
           allResult.err = result.err;
           break;
         }
       }
       if(!allResult.err){
-        allResult = {data: body.data.map(item => item.rowid || item._id)};
+        allResult = { data: body.map(item => item.rowid || item._id) };
       }
       res.print(allResult);
     }else{
-      let { rowid, _id, updateTime, ...theData} = body.data;
-      if(!rowid || !_id) {
+      let { _id, updateTime, ...theData} = body;
+      if(!_id) {
         res.print(error('id不能为空'));
         return;
       }
-      const result = await catchErr(Model.update({rowid, _id}, theData));
+      const result = await catchErr(Model.update({ _id }, theData));
       res.print(result);
     }
   }
@@ -99,19 +81,10 @@ class Controller {
     let { Plugin, catchErr } = WOOD;
     let Model = Plugin('model').Model(this.defaultModel),
         body = Util.getParams(req);
-    const result = await catchErr(Model.remove(body.data));
+    const result = await catchErr(Model.remove(body));
     res.print(result);
   }
 
-  // 软删除
-  async softRemove(req, res, next) {
-    let { Plugin, catchErr } = WOOD;
-    let Model = Plugin('model').Model(this.defaultModel),
-        body = Util.getParams(req);
-    body.data.status = -1;
-    const result = await catchErr(Model.update(body.data));
-    res.print(result);
-  }
 }
 
 module.exports = Controller;
